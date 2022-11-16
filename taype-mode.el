@@ -51,7 +51,7 @@
 (defconst taype-builtin-types
   (regexp-opt `("unit" "bool" ,(taype-obliv-name "bool")
                 "int" ,(taype-obliv-name "int")) 'symbols))
-(defconst taype-symbols
+(defconst taype-operators
   (regexp-opt `("\\" "->" ":" "=" "|" ","
                 "#[" "]" "<" ">" "(" ,(taype-obliv-name "(") ")"
                 "<=" "==" "+" "-" "*" "/" "&&" "||"
@@ -73,7 +73,7 @@
   `((,taype-top-keywords . font-lock-keyword-face)
     (,taype-keywords . font-lock-keyword-face)
     (,taype-builtin-types . font-lock-type-face)
-    (,taype-symbols . font-lock-builtin-face)
+    (,taype-operators . font-lock-builtin-face)
     (,taype-builtin-funs . font-lock-function-name-face)
     (,taype-builtin-consts . font-lock-constant-face)
     (,taype-ctors . font-lock-type-face)
