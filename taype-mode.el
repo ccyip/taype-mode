@@ -9,9 +9,8 @@
 
 ;;; Commentary:
 
-;; A major mode for editing taype files in Emacs.
-;;
-;; Support syntax highlighting (font lock) and basic indentation.
+;; A major mode for editing taype files in Emacs, which supports simple syntax
+;; highlighting (font lock).
 ;;
 ;; Partly copied from haskell-mode.
 
@@ -32,6 +31,14 @@
     (modify-syntax-entry ?\` "_" st)
     (modify-syntax-entry ?\' "_" st)
 
+    (modify-syntax-entry ?+ "." st)
+    (modify-syntax-entry ?* "." st)
+    (modify-syntax-entry ?/ "." st)
+    (modify-syntax-entry ?& "." st)
+    (modify-syntax-entry ?| "." st)
+    (modify-syntax-entry ?< "." st)
+    (modify-syntax-entry ?= "." st)
+
     st))
 
 (defconst taype-top-keywords
@@ -39,8 +46,7 @@
 (defconst taype-keywords
   (regexp-opt
    `("let" "in" "if" ,(taype-obliv-name "if") "then" "else" "mux"
-     "case" ,(taype-obliv-name "case") "of" "end"
-     ,(taype-obliv-name "inl") ,(taype-obliv-name "inr") "tape")
+     "case" ,(taype-obliv-name "case") "of" "end" "tape")
    'symbols))
 (defconst taype-builtin-types
   (regexp-opt `("unit" "bool" ,(taype-obliv-name "bool")
@@ -59,14 +65,19 @@
 (defconst taype-builtin-consts
   (regexp-opt '("True" "False") 'symbols))
 (defconst taype-numerals "\\_<[1-9]+\\_>")
+(defconst taype-ctors "\\_<[[:upper:]][[:alnum:]_']+\\_>")
+(defconst taype-obliv-ctors
+  (regexp-opt `(,(taype-obliv-name "inl") ,(taype-obliv-name "inr")) 'symbols))
 
 (defconst taype-font-lock-keywords
   `((,taype-top-keywords . font-lock-keyword-face)
     (,taype-keywords . font-lock-keyword-face)
     (,taype-builtin-types . font-lock-type-face)
     (,taype-symbols . font-lock-builtin-face)
-    (,taype-builtin-funs . font-lock-builtin-face)
+    (,taype-builtin-funs . font-lock-function-name-face)
     (,taype-builtin-consts . font-lock-constant-face)
+    (,taype-ctors . font-lock-type-face)
+    (,taype-obliv-ctors . font-lock-type-face)
     (,taype-numerals . font-lock-constant-face)))
 
 ;;;###autoload
@@ -76,7 +87,6 @@
   (setq font-lock-defaults '(taype-font-lock-keywords))
   (setq-local indent-tabs-mode nil)
   (setq-local tab-width 2)
-  (smie-setup nil #'ignore)
   (setq-local comment-start "--")
   (setq-local comment-end "")
   (setq-local comment-padding 1))
