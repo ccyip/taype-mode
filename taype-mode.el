@@ -1,6 +1,6 @@
 ;;; taype-mode.el --- A simple major mode for the taype language -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022 Qianchuan Ye
+;; Copyright (C) 2022-2023 Qianchuan Ye
 
 ;; Author: Qianchuan Ye <yeqianchuan@gmail.com>
 ;; Keywords: languages
