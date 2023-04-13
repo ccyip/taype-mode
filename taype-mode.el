@@ -12,28 +12,60 @@
 ;; A major mode for editing taype files in Emacs, which supports simple syntax
 ;; highlighting (font lock).
 ;;
-;; Partly copied from haskell-mode.
+;; Partly copied from haskell-mode and tuareg.
 
 ;;; Code:
 
-(defconst taype-obliv-prefix "`")
+(defgroup taype nil
+  "Support for the Taype language."
+  :link '(url-link "https://github.com/ccyip/taype-mode")
+  :group 'languages)
+
+
+(defgroup taype-faces nil
+  "Special faces for the Taype mode."
+  :group 'taype)
+
+(defface taype-font-lock-governing-face
+  '((((class color) (type tty)) (:bold t))
+    (((background light)) (:foreground "black" :bold t))
+    (t (:foreground "wheat" :bold t)))
+  "Face description for governing/leading keywords."
+  :group 'taype-facs)
+(defvar taype-font-lock-governing-face
+  'taype-font-lock-governing-face)
+
+(defface taype-font-lock-obliv-instance-face
+  '((((background light)) (:foreground "brown"))
+    (t (:foreground "khaki")))
+  "Face description for oblivious type instances."
+  :group 'taype-faces)
+(defvar taype-font-lock-obliv-instance-face
+  'taype-font-lock-obliv-instance-face)
+
+(defface taype-font-lock-constructor-face
+  '((t :inherit font-lock-constant-face))
+  "Face description for constructors."
+  :group 'taype-faces)
+(defvar taype-font-lock-constructor-face
+  'taype-font-lock-constructor-face)
 
 (defun taype-obliv-name (name)
-  (concat taype-obliv-prefix name))
+  (concat "~" name))
 
 (defconst taype-syntax-table
   (let ((st (make-syntax-table)))
-    (modify-syntax-entry ?\{ "(}1nb" st)
-    (modify-syntax-entry ?\} "){4nb" st)
-    (modify-syntax-entry ?- ". 123" st)
+    (modify-syntax-entry ?/ ". 12" st)
     (modify-syntax-entry ?\n ">" st)
 
-    (modify-syntax-entry ?\` "_" st)
+    (modify-syntax-entry ?~ "_" st)
     (modify-syntax-entry ?\' "_" st)
+    (modify-syntax-entry ?# "_" st)
+    (modify-syntax-entry ?% "_" st)
 
     (modify-syntax-entry ?+ "." st)
     (modify-syntax-entry ?* "." st)
-    (modify-syntax-entry ?/ "." st)
+    (modify-syntax-entry ?- "." st)
     (modify-syntax-entry ?& "." st)
     (modify-syntax-entry ?| "." st)
     (modify-syntax-entry ?< "." st)
@@ -41,43 +73,77 @@
 
     st))
 
-(defconst taype-top-keywords
-  (regexp-opt '("data" "fn" "obliv") 'symbols))
-(defconst taype-keywords
-  (regexp-opt
-   `("let" "in" "if" ,(taype-obliv-name "if") "then" "else" "mux"
-     "case" ,(taype-obliv-name "case") "of" "end" "tape")
-   'symbols))
-(defconst taype-builtin-types
-  (regexp-opt `("unit" "bool" ,(taype-obliv-name "bool")
-                "int" ,(taype-obliv-name "int")) 'symbols))
-(defconst taype-operators
-  (regexp-opt `("\\" "->" ":" "=" "|" ","
-                "<=" "==" "+" "-" "*" "/" "&&" "||"
-                ,(taype-obliv-name "<=") ,(taype-obliv-name "==")
-                ,(taype-obliv-name "+") ,(taype-obliv-name "-")
-                ,(taype-obliv-name "*") ,(taype-obliv-name "/")
-                ,(taype-obliv-name "&&") ,(taype-obliv-name "||"))))
-(defconst taype-builtin-funs
-  (regexp-opt `("not" ,(taype-obliv-name "not")
-                "s_bool" "r_bool" "s_int" "r_int") 'symbols))
-(defconst taype-builtin-consts
-  (regexp-opt '("True" "False") 'symbols))
-(defconst taype-numerals "\\_<[1-9]+\\_>")
-(defconst taype-ctors "\\_<[[:upper:]][[:alnum:]_']+\\_>")
-(defconst taype-obliv-ctors
-  (regexp-opt `(,(taype-obliv-name "inl") ,(taype-obliv-name "inr")) 'symbols))
-
 (defconst taype-font-lock-keywords
-  `((,taype-top-keywords . font-lock-keyword-face)
-    (,taype-keywords . font-lock-keyword-face)
-    (,taype-builtin-types . font-lock-type-face)
-    (,taype-operators . font-lock-variable-name-face)
-    (,taype-builtin-funs . font-lock-function-name-face)
-    (,taype-builtin-consts . font-lock-constant-face)
-    (,taype-ctors . font-lock-type-face)
-    (,taype-obliv-ctors . font-lock-type-face)
-    (,taype-numerals . font-lock-constant-face)))
+  (let* ((keyword-rx (regexp-opt
+                      `("let" "in" "if" ,(taype-obliv-name "if")
+                        "then" "else" "mux"
+                        "match" ,(taype-obliv-name "match")
+                        "with" "end")
+                      'symbols))
+         (var-rx (rx (? ?~) (+ (in alnum "#'_"))))
+         (ctor-rx (rx symbol-start
+                      upper
+                      (* (in alnum "_'"))
+                      symbol-end))
+         (obliv-ctor-rx (regexp-opt
+                         `(,(taype-obliv-name "inl")
+                           ,(taype-obliv-name "inr"))
+                         'symbols))
+         ;; The operator regular expressions are not used at the moment.
+         (operator-rx (regexp-opt
+                       `("\\" "->" "=>" ":" "=" "|" ","
+                         "<=" "==" "+" "-" "*" "/" "&&" "||"
+                         ,(taype-obliv-name "<=") ,(taype-obliv-name "==")
+                         ,(taype-obliv-name "+") ,(taype-obliv-name "-")
+                         ,(taype-obliv-name "*") ,(taype-obliv-name "/")
+                         ,(taype-obliv-name "&&") ,(taype-obliv-name "||"))))
+         (operator-extra-rx (regexp-opt
+                             `("not" ,(taype-obliv-name "not"))
+                             'symbols))
+         (def-fun-rx (rx symbol-start
+                         (group (| "fn" "fn'"))
+                         symbol-end
+                         (+ space)
+                         (group (regexp var-rx))))
+         (def-type-rx (rx symbol-start
+                          (group (| "data" "obliv"))
+                          symbol-end
+                          (+ space)
+                          (group (regexp var-rx))))
+         (lam-rx (rx "\\"
+                     (group (*? anything))
+                     "=>"))
+         (alt-rx (rx "|"
+                     (* space)
+                     (group (regexp var-rx))
+                     (group (*? anything))
+                     "=>"))
+         (inst-rx (rx symbol-start
+                      (? ?~)
+                      (+ (in alnum "'_"))
+                      "#"
+                      (* (in alnum "#'_"))
+                      symbol-end))
+         (ppx-rx (rx symbol-start
+                     ?%
+                     (* (in alnum "'_"))
+                     symbol-end)))
+    `(
+      (,keyword-rx . font-lock-keyword-face)
+      (,def-fun-rx
+        (1 taype-font-lock-governing-face)
+        (2 font-lock-function-name-face))
+      (,def-type-rx
+        (1 taype-font-lock-governing-face)
+        (2 font-lock-type-face))
+      (,lam-rx (1 font-lock-variable-name-face))
+      (,alt-rx
+       (1 taype-font-lock-constructor-face)
+       (2 font-lock-variable-name-face))
+      (,ctor-rx . taype-font-lock-constructor-face)
+      (,obliv-ctor-rx . taype-font-lock-constructor-face)
+      (,inst-rx (0 taype-font-lock-obliv-instance-face t))
+      (,ppx-rx . font-lock-preprocessor-face))))
 
 ;;;###autoload
 (define-derived-mode taype-mode prog-mode "taype"
@@ -86,12 +152,14 @@
   (setq font-lock-defaults '(taype-font-lock-keywords))
   (setq-local indent-tabs-mode nil)
   (setq-local tab-width 2)
-  (setq-local comment-start "--")
+  (setq-local comment-start "//")
   (setq-local comment-end "")
   (setq-local comment-padding 1))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.tp\\'" . taype-mode))
+(add-to-list 'auto-mode-alist '("\\.tpc\\'" . taype-mode))
+(add-to-list 'auto-mode-alist '("\\.oil\\'" . taype-mode))
 
 (provide 'taype-mode)
 
