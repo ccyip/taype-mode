@@ -130,6 +130,7 @@
                      symbol-end)))
     `(
       (,keyword-rx . font-lock-keyword-face)
+      (,inst-rx (0 taype-font-lock-obliv-instance-face))
       (,def-fun-rx
         (1 taype-font-lock-governing-face)
         (2 font-lock-function-name-face))
@@ -142,7 +143,6 @@
        (2 font-lock-variable-name-face))
       (,ctor-rx . taype-font-lock-constructor-face)
       (,obliv-ctor-rx . taype-font-lock-constructor-face)
-      (,inst-rx (0 taype-font-lock-obliv-instance-face t))
       (,ppx-rx . font-lock-preprocessor-face))))
 
 ;;;###autoload
