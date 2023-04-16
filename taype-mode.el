@@ -92,7 +92,7 @@
                            'symbols))
            ;; The operator regular expressions are not used at the moment.
            (operator-rx (regexp-opt
-                         `("\\" "->" "=>" ":" "=" "|"
+                         `("\\" "->" "=>" ":" "=" "|" ","
                            "<=" "==" "+" "-" "*" "/" "&&" "||"
                            ,(taype-obliv-name "<=") ,(taype-obliv-name "==")
                            ,(taype-obliv-name "+") ,(taype-obliv-name "-")
@@ -142,7 +142,6 @@
           (2 font-lock-type-face))
         ;; (,lam-rx (1 font-lock-variable-name-face))
         ;; (,alt-rx (1 font-lock-variable-name-face))
-        (,operator-rx . font-lock-variable-name-face)
         (,ctor-rx . taype-font-lock-constructor-face)
         (,obliv-ctor-rx . taype-font-lock-constructor-face)
         (,builtin-rx . font-lock-builtin-face)
