@@ -97,9 +97,12 @@
                          ,(taype-obliv-name "+") ,(taype-obliv-name "-")
                          ,(taype-obliv-name "*") ,(taype-obliv-name "/")
                          ,(taype-obliv-name "&&") ,(taype-obliv-name "||"))))
-         (operator-extra-rx (regexp-opt
-                             `("not" ,(taype-obliv-name "not"))
-                             'symbols))
+         (builtin-rx (regexp-opt
+                      `("not" ,(taype-obliv-name "not")
+                        ,(taype-obliv-name "prt")
+                        ,(taype-obliv-name "prl")
+                        ,(taype-obliv-name "prr"))
+                      'symbols))
          (def-fun-rx (rx symbol-start
                          (group (| "fn" "fn'"))
                          symbol-end
@@ -143,6 +146,7 @@
        (2 font-lock-variable-name-face))
       (,ctor-rx . taype-font-lock-constructor-face)
       (,obliv-ctor-rx . taype-font-lock-constructor-face)
+      (,builtin-rx . font-lock-builtin-face)
       (,ppx-rx . font-lock-preprocessor-face))))
 
 ;;;###autoload
