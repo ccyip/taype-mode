@@ -74,80 +74,79 @@
     st))
 
 (defconst taype-font-lock-keywords
-  (let* ((keyword-rx (regexp-opt
-                      `("let" "in" "if" ,(taype-obliv-name "if")
-                        "then" "else" "mux"
-                        "match" ,(taype-obliv-name "match")
-                        "with" "end")
-                      'symbols))
-         (var-rx (rx (? ?~) (+ (in alnum "#'_"))))
-         (ctor-rx (rx symbol-start
-                      upper
-                      (* (in alnum "_'"))
-                      symbol-end))
-         (obliv-ctor-rx (regexp-opt
-                         `(,(taype-obliv-name "inl")
-                           ,(taype-obliv-name "inr"))
-                         'symbols))
-         ;; The operator regular expressions are not used at the moment.
-         (operator-rx (regexp-opt
-                       `("\\" "->" "=>" ":" "=" "|" ","
-                         "<=" "==" "+" "-" "*" "/" "&&" "||"
-                         ,(taype-obliv-name "<=") ,(taype-obliv-name "==")
-                         ,(taype-obliv-name "+") ,(taype-obliv-name "-")
-                         ,(taype-obliv-name "*") ,(taype-obliv-name "/")
-                         ,(taype-obliv-name "&&") ,(taype-obliv-name "||"))))
-         (builtin-rx (regexp-opt
-                      `("not" ,(taype-obliv-name "not")
-                        ,(taype-obliv-name "prt")
-                        ,(taype-obliv-name "prl")
-                        ,(taype-obliv-name "prr"))
-                      'symbols))
-         (def-fun-rx (rx symbol-start
-                         (group (| "fn" "fn'"))
-                         symbol-end
-                         (+ space)
-                         (group (regexp var-rx))))
-         (def-type-rx (rx symbol-start
-                          (group (| "data" "obliv"))
-                          symbol-end
-                          (+ space)
-                          (group (regexp var-rx))))
-         (lam-rx (rx "\\"
-                     (group (*? anything))
-                     "=>"))
-         (alt-rx (rx "|"
-                     (* space)
-                     (group (regexp var-rx))
-                     (group (*? anything))
-                     "=>"))
-         (inst-rx (rx symbol-start
-                      (? ?~)
-                      (+ (in alnum "'_"))
-                      "#"
-                      (* (in alnum "#'_"))
-                      symbol-end))
-         (ppx-rx (rx symbol-start
-                     ?%
-                     (* (in alnum "'_"))
-                     symbol-end)))
-    `(
-      (,keyword-rx . font-lock-keyword-face)
-      (,inst-rx (0 taype-font-lock-obliv-instance-face))
-      (,def-fun-rx
-        (1 taype-font-lock-governing-face)
-        (2 font-lock-function-name-face))
-      (,def-type-rx
-        (1 taype-font-lock-governing-face)
-        (2 font-lock-type-face))
-      (,lam-rx (1 font-lock-variable-name-face))
-      (,alt-rx
-       (1 taype-font-lock-constructor-face)
-       (2 font-lock-variable-name-face))
-      (,ctor-rx . taype-font-lock-constructor-face)
-      (,obliv-ctor-rx . taype-font-lock-constructor-face)
-      (,builtin-rx . font-lock-builtin-face)
-      (,ppx-rx . font-lock-preprocessor-face))))
+  (rx-let ((anyspace (in space ?\n))
+           (var (: (? ?~) (in "_" letter) (* (in alnum "#'_")))))
+    (let* ((keyword-rx (regexp-opt
+                        `("let" "in" "if" ,(taype-obliv-name "if")
+                          "then" "else" "mux"
+                          "match" ,(taype-obliv-name "match")
+                          "with" "end")
+                        'symbols))
+           (ctor-rx (rx symbol-start
+                        upper
+                        (* (in alnum "_'"))
+                        symbol-end))
+           (obliv-ctor-rx (regexp-opt
+                           `(,(taype-obliv-name "inl")
+                             ,(taype-obliv-name "inr"))
+                           'symbols))
+           ;; The operator regular expressions are not used at the moment.
+           (operator-rx (regexp-opt
+                         `("\\" "->" "=>" ":" "=" "|" ","
+                           "<=" "==" "+" "-" "*" "/" "&&" "||"
+                           ,(taype-obliv-name "<=") ,(taype-obliv-name "==")
+                           ,(taype-obliv-name "+") ,(taype-obliv-name "-")
+                           ,(taype-obliv-name "*") ,(taype-obliv-name "/")
+                           ,(taype-obliv-name "&&") ,(taype-obliv-name "||"))))
+           (builtin-rx (regexp-opt
+                        `("not" ,(taype-obliv-name "not")
+                          ,(taype-obliv-name "prt")
+                          ,(taype-obliv-name "prl")
+                          ,(taype-obliv-name "prr"))
+                        'symbols))
+           (def-fun-rx (rx symbol-start
+                           (group (| "fn" "fn'"))
+                           symbol-end
+                           (+ anyspace)
+                           (group var)))
+           (def-type-rx (rx symbol-start
+                            (group (| "data" "obliv"))
+                            symbol-end
+                            (+ anyspace)
+                            (group var)))
+           (lam-rx (rx "\\"
+                       (group (*? anything))
+                       "=>"))
+           (alt-rx (rx (| "with" "|")
+                       (* anyspace)
+                       (opt var)
+                       (group (*? (not "|")))
+                       "=>"))
+           (inst-rx (rx symbol-start
+                        (? ?~)
+                        (+ (in alnum "'_"))
+                        "#"
+                        (* (in alnum "#'_"))
+                        symbol-end))
+           (ppx-rx (rx symbol-start
+                       ?%
+                       (* (in alnum "'_"))
+                       symbol-end)))
+      `(
+        (,keyword-rx . font-lock-keyword-face)
+        (,inst-rx (0 taype-font-lock-obliv-instance-face))
+        (,def-fun-rx
+          (1 taype-font-lock-governing-face)
+          (2 font-lock-function-name-face))
+        (,def-type-rx
+          (1 taype-font-lock-governing-face)
+          (2 font-lock-type-face))
+        (,lam-rx (1 font-lock-variable-name-face))
+        (,alt-rx (1 font-lock-variable-name-face))
+        (,ctor-rx . taype-font-lock-constructor-face)
+        (,obliv-ctor-rx . taype-font-lock-constructor-face)
+        (,builtin-rx . font-lock-builtin-face)
+        (,ppx-rx . font-lock-preprocessor-face)))))
 
 ;;;###autoload
 (define-derived-mode taype-mode prog-mode "taype"
