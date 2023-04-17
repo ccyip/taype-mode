@@ -126,7 +126,7 @@
                         (? ?~)
                         (+ (in alnum "'_"))
                         "#"
-                        (* (in alnum "#'_"))
+                        var
                         symbol-end))
            (ppx-rx (rx symbol-start
                        ?%
