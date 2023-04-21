@@ -130,10 +130,9 @@
                         symbol-end))
            (ppx-rx (rx symbol-start
                        ?%
-                       (* (in alnum "'_"))
-                       symbol-end)))
+                       (* (not anyspace)))))
       `((,keyword-rx . font-lock-keyword-face)
-        (,inst-rx (0 taype-font-lock-obliv-instance-face))
+        (,inst-rx . taype-font-lock-obliv-instance-face)
         (,def-fun-rx
           (1 taype-font-lock-governing-face)
           (2 font-lock-function-name-face))
@@ -142,11 +141,11 @@
           (2 font-lock-type-face))
         ;; (,lam-rx (1 font-lock-variable-name-face))
         ;; (,alt-rx (1 font-lock-variable-name-face))
+        (,ppx-rx . font-lock-preprocessor-face)
         (,operator-rx . font-lock-variable-name-face)
         (,ctor-rx . taype-font-lock-constructor-face)
         (,obliv-ctor-rx . taype-font-lock-constructor-face)
-        (,builtin-rx . font-lock-builtin-face)
-        (,ppx-rx . font-lock-preprocessor-face)))))
+        (,builtin-rx . font-lock-builtin-face)))))
 
 ;;;###autoload
 (define-derived-mode taype-mode prog-mode "taype"
