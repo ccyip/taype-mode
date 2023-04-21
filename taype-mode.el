@@ -104,13 +104,14 @@
                           ,(taype-obliv-name "prl")
                           ,(taype-obliv-name "prr"))
                         'symbols))
+           (gov-rx (regexp-opt '("fn" "fn'" "data" "obliv") 'symbols))
            (def-fun-rx (rx symbol-start
-                           (group (| "fn" "fn'"))
+                           (| "fn" "fn'")
                            symbol-end
                            (+ anyspace)
                            (group var)))
            (def-type-rx (rx symbol-start
-                            (group (| "data" "obliv"))
+                            (| "data" "obliv")
                             symbol-end
                             (+ anyspace)
                             (group var)))
@@ -131,14 +132,13 @@
            (ppx-rx (rx symbol-start
                        ?%
                        (* (not anyspace)))))
-      `((,keyword-rx . font-lock-keyword-face)
+      `((,gov-rx . taype-font-lock-governing-face)
+        (,keyword-rx . font-lock-keyword-face)
         (,inst-rx . taype-font-lock-obliv-instance-face)
         (,def-fun-rx
-          (1 taype-font-lock-governing-face)
-          (2 font-lock-function-name-face))
+          (1 font-lock-function-name-face))
         (,def-type-rx
-          (1 taype-font-lock-governing-face)
-          (2 font-lock-type-face))
+          (1 font-lock-type-face))
         ;; (,lam-rx (1 font-lock-variable-name-face))
         ;; (,alt-rx (1 font-lock-variable-name-face))
         (,ppx-rx . font-lock-preprocessor-face)
