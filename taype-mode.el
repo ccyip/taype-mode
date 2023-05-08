@@ -75,7 +75,7 @@
 
 (defconst taype-font-lock-keywords
   (rx-let ((anyspace (in space ?\n))
-           (var (: (? ?~) (in "_" letter) (* (in alnum "#'_")))))
+           (var (: (? ?~) (in "_" letter) (* (in alnum "'_")))))
     (let* ((keyword-rx (regexp-opt
                         `("let" "in" "if" ,(taype-obliv-name "if")
                           "then" "else" "mux"
@@ -124,10 +124,8 @@
                        (group (*? (not "|")))
                        "=>"))
            (inst-rx (rx symbol-start
-                        (? ?~)
-                        (+ (in alnum "'_"))
-                        "#"
                         var
+                        (+ (: "#" var))
                         symbol-end))
            (ppx-rx (rx symbol-start
                        ?%
